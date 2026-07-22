@@ -13,8 +13,10 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { useSleep } from "../context/SleepContext";
 import BottomNav from "../components/BottomNav";
+import { useNavigate } from "react-router-dom";
 
 function Profile() {
+  const navigate = useNavigate();
 
   const {
   userName,
@@ -27,7 +29,7 @@ function Profile() {
 
 const [editing, setEditing] = useState(false);
 
-const [name, setName] = useState(userName);
+const [name, setName] = useState("");
 
 const [goal, setGoal] = useState(sleepGoal);
 
@@ -39,6 +41,13 @@ const saveProfile = () => {
 
   setEditing(false);
 
+};
+const logout = () => {
+  localStorage.removeItem("userName");
+
+  setUserName("");
+
+  navigate("/welcome", { replace: true });
 };
 
   return (
@@ -73,7 +82,7 @@ className="text-white"
 
 <h1 className="text-white text-4xl font-bold mt-6">
 
-{userName}
+{userName || "Pengguna"}
 
 </h1>
 
@@ -84,7 +93,11 @@ className="text-white"
 </p>
 
 <button
-  onClick={() => setEditing(!editing)}
+  onClick={() => {
+    setName(userName);
+    setGoal(sleepGoal);
+    setEditing(!editing);
+  }}
   className="mt-5 rounded-full bg-white/10 px-5 py-3 flex items-center gap-2 text-white"
 >
   <Pencil size={18} />
@@ -312,6 +325,7 @@ Streak
       {/* LOGOUT */}
 
       <button
+        onClick={logout}
         className="mt-8 w-full rounded-3xl bg-red-500 py-5 text-white font-semibold hover:bg-red-600 transition"
       >
 

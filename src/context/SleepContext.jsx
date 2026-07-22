@@ -1,71 +1,35 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useContext, useState, useEffect } from "react";
 
 const SleepContext = createContext();
 
 export function SleepProvider({ children }) {
-
-  const [sleepScore, setSleepScore] = useState(() => {
-    return Number(localStorage.getItem("sleepScore")) || 0;
-  });
-
-  const [sleepGoal, setSleepGoal] = useState(() => {
-    return Number(localStorage.getItem("sleepGoal")) || 8;
-  });
-
-  const [streak, setStreak] = useState(() => {
-    return Number(localStorage.getItem("streak")) || 12;
-  });
-
   const [userName, setUserName] = useState(() => {
-    return localStorage.getItem("userName") || "Ulfah";
+    return localStorage.getItem("userName") || "";
   });
-  const [history, setHistory] = useState(() => {
 
-  const data = localStorage.getItem("sleepHistory");
+  const [sleepScore, setSleepScore] = useState(0);
 
-  return data ? JSON.parse(data) : [];
+  const [sleepGoal, setSleepGoal] = useState(8);
 
-});
+  const [streak, setStreak] = useState(12);
 
-  useEffect(() => {
-    localStorage.setItem("sleepScore", sleepScore);
-  }, [sleepScore]);
-
-  useEffect(() => {
-    localStorage.setItem("sleepGoal", sleepGoal);
-  }, [sleepGoal]);
-
-  useEffect(() => {
-    localStorage.setItem("streak", streak);
-  }, [streak]);
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
     localStorage.setItem("userName", userName);
   }, [userName]);
 
-  useEffect(() => {
-  localStorage.setItem(
-    "sleepHistory",
-    JSON.stringify(history)
-  );
-
-}, [history]);
-
   return (
     <SleepContext.Provider
       value={{
-        sleepScore,
-        setSleepScore,
-
-        sleepGoal,
-        setSleepGoal,
-
-        streak,
-        setStreak,
-
         userName,
         setUserName,
-
+        sleepScore,
+        setSleepScore,
+        sleepGoal,
+        setSleepGoal,
+        streak,
+        setStreak,
         history,
         setHistory,
       }}

@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { useSleep } from "../context/SleepContext";
 
 function Welcome() {
-
   const navigate = useNavigate();
 
   const { setUserName } = useSleep();
@@ -13,85 +12,64 @@ function Welcome() {
   const [name, setName] = useState("");
 
   const startApp = () => {
-
     if (!name.trim()) return;
 
     setUserName(name);
 
-    navigate("/");
-
+    navigate("/", { replace: true });
   };
 
   return (
-
     <div className="min-h-screen bg-gradient-to-b from-[#8B5CF6] via-[#5B21B6] to-[#1E1B4B] flex justify-center items-center">
 
-      <div className="w-[393px] px-8">
+      <motion.div
+        initial={{ opacity: 0, y: 40 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-[393px] px-8"
+      >
 
-        <motion.div
+        <div className="text-center">
 
-          initial={{ opacity:0, y:30 }}
+          <div className="mx-auto w-28 h-28 rounded-full bg-gradient-to-br from-violet-500 to-indigo-700 flex items-center justify-center shadow-[0_0_40px_rgba(139,92,246,.8)]">
 
-          animate={{ opacity:1, y:0 }}
-
-          transition={{ duration:0.6 }}
-
-          className="rounded-[35px] bg-white/10 backdrop-blur-3xl border border-white/10 p-8 text-center"
-
-        >
-
-          <div className="w-24 h-24 mx-auto rounded-full bg-gradient-to-r from-violet-500 to-indigo-600 flex justify-center items-center">
-
-            <MoonStar size={42} className="text-white"/>
+            <MoonStar size={52} className="text-white" />
 
           </div>
 
           <h1 className="text-white text-4xl font-bold mt-8">
-
             Selamat Datang
-
           </h1>
 
           <p className="text-violet-200 mt-4 leading-7">
-
             Sebelum memulai,
-
-            siapa nama kamu?
-
+            <br />
+            masukkan nama Anda.
           </p>
 
+        </div>
+
+        <div className="mt-10">
+
           <input
-
             value={name}
-
-            onChange={(e)=>setName(e.target.value)}
-
-            placeholder="Masukkan nama"
-
-            className="mt-8 w-full rounded-3xl bg-white/10 p-5 outline-none text-white placeholder:text-violet-300"
-
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Nama Anda"
+            className="w-full rounded-3xl bg-white/10 border border-white/10 p-5 text-white placeholder:text-violet-300 outline-none"
           />
 
           <button
-
             onClick={startApp}
-
-            className="mt-6 w-full rounded-3xl bg-gradient-to-r from-violet-500 to-indigo-600 py-5 text-white font-semibold"
-
+            className="mt-6 w-full rounded-3xl bg-gradient-to-r from-violet-500 to-indigo-600 py-5 text-white text-lg font-semibold"
           >
-
             Mulai
-
           </button>
 
-        </motion.div>
+        </div>
 
-      </div>
+      </motion.div>
 
     </div>
-
   );
-
 }
 
 export default Welcome;

@@ -1,5 +1,8 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 
+import { useSleep } from "./context/SleepContext";
+
+import Welcome from "./pages/Welcome";
 import Home from "./pages/Home";
 import SleepCheck from "./pages/SleepCheck";
 import Question from "./pages/Question";
@@ -12,29 +15,31 @@ import NappiAI from "./pages/NappiAI";
 import Profile from "./pages/Profile";
 
 function App() {
+  const { userName } = useSleep();
+
   return (
     <Routes>
-      <Route path="/" element={<Home />} />
-
-      <Route path="/sleep-check" element={<SleepCheck />} />
-
-      <Route path="/question" element={<Question />} />
-
-      <Route path="/loading" element={<Loading />} />
-
-      <Route path="/result" element={<Result />} />
+      <Route path="/welcome" element={<Welcome />} />
 
       <Route
-        path="/recommendation"
-        element={<Recommendation />}
+        path="/"
+        element={
+          userName ? (
+            <Home />
+          ) : (
+            <Navigate to="/welcome" replace />
+          )
+        }
       />
 
+      <Route path="/sleep-check" element={<SleepCheck />} />
+      <Route path="/question" element={<Question />} />
+      <Route path="/loading" element={<Loading />} />
+      <Route path="/result" element={<Result />} />
+      <Route path="/recommendation" element={<Recommendation />} />
       <Route path="/progress" element={<Progress />} />
-
       <Route path="/audio" element={<SleepAudio />} />
-
       <Route path="/ai" element={<NappiAI />} />
-
       <Route path="/profile" element={<Profile />} />
     </Routes>
   );
