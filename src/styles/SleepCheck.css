@@ -1,0 +1,54 @@
+.sleep-page{
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background:linear-gradient(180deg,#6B46FF,#2C1766);
+}
+
+.sleep-container{
+    width:393px;
+    min-height:852px;
+    padding:30px;
+    color:white;
+    text-align:center;
+}
+
+.back-btn{
+    width:45px;
+    height:45px;
+    border:none;
+    border-radius:15px;
+    background:rgba(255,255,255,.15);
+    color:white;
+    cursor:pointer;
+}
+
+.nappi{
+    width:220px;
+    margin:40px auto 20px;
+    display:block;
+}
+
+.sleep-container h1{
+    font-size:34px;
+    margin-bottom:10px;
+}
+
+.sleep-container p{
+    color:#ddd;
+    line-height:1.6;
+}
+
+.start-check{
+    margin-top:40px;
+    width:100%;
+    padding:18px;
+    border:none;
+    border-radius:20px;
+    background:#8E6BFF;
+    color:white;
+    font-size:18px;
+    font-weight:600;
+    cursor:pointer;
+}
