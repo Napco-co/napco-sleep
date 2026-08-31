@@ -13,55 +13,60 @@ import {
   LineChart,
   Line,
   XAxis,
+  YAxis,
   Tooltip,
 } from "recharts";
 
 import { useSleep } from "../context/SleepContext";
-
 import BottomNav from "../components/BottomNav";
-
-const defaultData = [
-  { day: "1", score: 0 },
-  { day: "2", score: 0 },
-  { day: "3", score: 0 },
-  { day: "4", score: 0 },
-  { day: "5", score: 0 },
-  { day: "6", score: 0 },
-  { day: "7", score: 0 },
-];
 
 function Progress() {
   const {
-    sleepScore,
-    sleepGoal,
-    streak,
+    sleepScore = 0,
+    sleepGoal = 8,
+    streak = 0,
     history = [],
   } = useSleep();
 
-  // Buat data grafik selalu aman untuk 7 hari
-  const weeklyData = defaultData.map((item, index) => ({
-    ...item,
-    score:
-      history.length > 0
-        ? history[history.length - 1 - index]?.score ?? 0
-        : 0,
-  }));
+  // Pastikan history selalu berupa array
+  const safeHistory = Array.isArray(history) ? history : [];
 
-  // Sleep Check terbaru ditampilkan di hari ke-7
-  if (history.length > 0) {
-    weeklyData[6].score = history[0]?.score ?? sleepScore;
+  // Buat data 7 hari
+  const weeklyData = Array.from({ length: 7 }, (_, index) => {
+    const historyItem = safeHistory[index];
+
+    return {
+      day: index + 1,
+      score: historyItem ? historyItem.score : 0,
+    };
+  });
+
+  // Sleep Check terbaru ditampilkan di hari terakhir
+  if (safeHistory.length > 0) {
+    weeklyData[6].score = safeHistory[0].score;
   } else {
-    weeklyData[6].score = sleepScore;
+    weeklyData[6].score = sleepScore || 0;
   }
 
-  const average = Math.round(
-    weeklyData.reduce((sum, item) => sum + item.score, 0) /
-      weeklyData.length
-  );
+  // Hanya hitung score yang sudah ada
+  const recordedScores = weeklyData
+    .map((item) => item.score)
+    .filter((score) => score > 0);
 
-  const best = Math.max(
-    ...weeklyData.map((item) => item.score)
-  );
+  const average =
+    recordedScores.length > 0
+      ? Math.round(
+          recordedScores.reduce(
+            (sum, score) => sum + score,
+            0
+          ) / recordedScores.length
+        )
+      : 0;
+
+  const best =
+    recordedScores.length > 0
+      ? Math.max(...recordedScores)
+      : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#8B5CF6] via-[#5B21B6] to-[#1E1B4B] flex justify-center">
@@ -74,7 +79,6 @@ function Progress() {
         >
 
           {/* HEADER */}
-
           <div>
             <p className="text-violet-200">
               Progress Tidur 🌙
@@ -86,13 +90,11 @@ function Progress() {
           </div>
 
           {/* SCORE */}
-
           <div className="mt-8 rounded-[35px] bg-white/10 backdrop-blur-3xl border border-white/10 p-8">
 
             <div className="flex justify-between items-center">
 
               <div>
-
                 <p className="text-violet-200">
                   Sleep Score Hari Ini
                 </p>
@@ -100,7 +102,6 @@ function Progress() {
                 <h2 className="text-6xl font-bold text-white mt-3">
                   {sleepScore}
                 </h2>
-
               </div>
 
               <div className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 flex items-center justify-center shadow-xl">
@@ -114,8 +115,7 @@ function Progress() {
 
             </div>
 
-            {/* GRAPH */}
-
+            {/* CHART */}
             <div className="mt-8 h-[230px]">
 
               <ResponsiveContainer
@@ -127,6 +127,11 @@ function Progress() {
 
                   <XAxis
                     dataKey="day"
+                    stroke="#DDD6FE"
+                  />
+
+                  <YAxis
+                    domain={[0, 100]}
                     stroke="#DDD6FE"
                   />
 
@@ -149,11 +154,9 @@ function Progress() {
           </div>
 
           {/* STATS */}
-
           <div className="grid grid-cols-2 gap-4 mt-6">
 
             {/* TARGET */}
-
             <div className="rounded-3xl bg-white/10 p-5">
 
               <div className="flex items-center gap-3">
@@ -173,7 +176,6 @@ function Progress() {
             </div>
 
             {/* STREAK */}
-
             <div className="rounded-3xl bg-white/10 p-5">
 
               <div className="flex items-center gap-3">
@@ -193,7 +195,6 @@ function Progress() {
             </div>
 
             {/* AVERAGE */}
-
             <div className="rounded-3xl bg-white/10 p-5">
 
               <div className="flex items-center gap-3">
@@ -213,7 +214,6 @@ function Progress() {
             </div>
 
             {/* BEST */}
-
             <div className="rounded-3xl bg-white/10 p-5">
 
               <div className="flex items-center gap-3">
@@ -235,7 +235,6 @@ function Progress() {
           </div>
 
           {/* ACHIEVEMENT */}
-
           <div className="mt-6 rounded-[35px] bg-white/10 backdrop-blur-xl p-6">
 
             <h2 className="text-white text-2xl font-bold">
@@ -244,8 +243,7 @@ function Progress() {
 
             <div className="mt-6 space-y-4">
 
-              {/* ACHIEVEMENT 1 */}
-
+              {/* SLEEP MASTER */}
               <div className="rounded-2xl bg-white/10 p-4 flex items-center gap-4">
 
                 <div className="text-4xl">
@@ -268,8 +266,7 @@ function Progress() {
 
               </div>
 
-              {/* ACHIEVEMENT 2 */}
-
+              {/* STREAK */}
               <div className="rounded-2xl bg-white/10 p-4 flex items-center gap-4">
 
                 <div className="text-4xl">
@@ -292,8 +289,7 @@ function Progress() {
 
               </div>
 
-              {/* ACHIEVEMENT 3 */}
-
+              {/* SLEEP GOAL */}
               <div className="rounded-2xl bg-white/10 p-4 flex items-center gap-4">
 
                 <div className="text-4xl">
@@ -321,7 +317,6 @@ function Progress() {
           </div>
 
           {/* AI INSIGHT */}
-
           <div className="mt-6 rounded-[35px] bg-white/10 backdrop-blur-xl p-6">
 
             <div className="flex items-center gap-3">
@@ -379,7 +374,6 @@ function Progress() {
           </div>
 
           {/* HISTORY */}
-
           <div className="mt-6 rounded-[35px] bg-white/10 backdrop-blur-xl p-6">
 
             <h2 className="text-white text-2xl font-bold">
@@ -388,7 +382,7 @@ function Progress() {
 
             <div className="mt-5 space-y-3">
 
-              {history.length === 0 ? (
+              {safeHistory.length === 0 ? (
 
                 <p className="text-violet-200">
                   Belum ada riwayat.
@@ -396,7 +390,7 @@ function Progress() {
 
               ) : (
 
-                history.map((item, index) => (
+                safeHistory.map((item, index) => (
 
                   <div
                     key={index}
