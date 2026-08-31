@@ -19,7 +19,6 @@ import {
 } from "recharts";
 
 import { useSleep } from "../context/SleepContext";
-
 import BottomNav from "../components/BottomNav";
 
 function Progress() {
@@ -31,37 +30,57 @@ function Progress() {
   } = useSleep();
 
   // =====================================================
-  // DATA GRAFIK
+  // GRAFIK PROGRESS
   // =====================================================
 
-  // History disimpan dari yang terbaru ke yang paling lama.
-  // Kita balik agar grafik menjadi:
-  // Hari 1 → Hari 2 → Hari 3 → ... → Hari 7
+  /*
+    History dari SleepContext disimpan:
+    terbaru → terlama
+
+    Contoh:
+    [
+      { score: 80 },
+      { score: 70 },
+      { score: 60 }
+    ]
+
+    Kita balik menjadi:
+    Hari 1 = 60
+    Hari 2 = 70
+    Hari 3 = 80
+  */
 
   const chronologicalHistory = [...history]
     .slice(0, 7)
     .reverse();
 
-  // Buat 7 titik hari.
-  // Hari yang belum memiliki data akan bernilai null,
-  // sehingga tidak muncul sebagai skor 0 palsu.
+  /*
+    HANYA membuat titik sebanyak jumlah Sleep Check.
 
-  const weeklyData = Array.from(
-    { length: 7 },
-    (_, index) => ({
+    Jadi kalau baru 1 kali:
+    [{ day: 1, score: 70 }]
+
+    Kalau 2 kali:
+    [{ day: 1, score: 70 },
+     { day: 2, score: 80 }]
+
+    Tidak ada data palsu di Hari 7.
+  */
+
+  const weeklyData = chronologicalHistory.map(
+    (item, index) => ({
       day: index + 1,
-      score:
-        chronologicalHistory[index]?.score ?? null,
+      score: Number(item.score),
     })
   );
 
   // =====================================================
-  // DATA STATISTIK
+  // STATISTIK
   // =====================================================
 
   const scores = history
-    .map((item) => item.score)
-    .filter((score) => typeof score === "number");
+    .map((item) => Number(item.score))
+    .filter((score) => !isNaN(score));
 
   const average =
     scores.length > 0
@@ -88,9 +107,9 @@ function Progress() {
           animate={{ opacity: 1, y: 0 }}
         >
 
-          {/* =====================================================
+          {/* =================================================
               HEADER
-          ===================================================== */}
+          ================================================= */}
 
           <div>
             <p className="text-violet-200">
@@ -103,9 +122,9 @@ function Progress() {
           </div>
 
 
-          {/* =====================================================
-              SCORE CARD + GRAPH
-          ===================================================== */}
+          {/* =================================================
+              SCORE + GRAPH
+          ================================================= */}
 
           <div className="mt-8 rounded-[35px] bg-white/10 backdrop-blur-3xl border border-white/10 p-8">
 
@@ -135,9 +154,9 @@ function Progress() {
             </div>
 
 
-            {/* =====================================================
+            {/* =================================================
                 GRAPH
-            ===================================================== */}
+            ================================================= */}
 
             <div className="mt-8 h-[230px]">
 
@@ -156,8 +175,6 @@ function Progress() {
                   }}
                 >
 
-                  {/* GRID */}
-
                   <CartesianGrid
                     stroke="rgba(255,255,255,0.08)"
                     vertical={false}
@@ -168,6 +185,10 @@ function Progress() {
 
                   <XAxis
                     dataKey="day"
+                    type="number"
+                    domain={[1, 7]}
+                    ticks={[1, 2, 3, 4, 5, 6, 7]}
+                    allowDecimals={false}
                     stroke="#DDD6FE"
                     tick={{
                       fill: "#DDD6FE",
@@ -176,12 +197,6 @@ function Progress() {
                     tickLine={false}
                     axisLine={{
                       stroke: "#DDD6FE",
-                    }}
-                    label={{
-                      value: "Hari",
-                      position: "insideBottom",
-                      offset: -2,
-                      fill: "#DDD6FE",
                     }}
                   />
 
@@ -212,7 +227,7 @@ function Progress() {
                       border:
                         "1px solid rgba(255,255,255,0.2)",
                       borderRadius: "12px",
-                      color: "white",
+                      color: "#FFFFFF",
                     }}
                     labelStyle={{
                       color: "#DDD6FE",
@@ -234,7 +249,6 @@ function Progress() {
                     dataKey="score"
                     stroke="#C4B5FD"
                     strokeWidth={4}
-                    connectNulls={false}
                     dot={{
                       r: 5,
                       fill: "#FFFFFF",
@@ -255,9 +269,9 @@ function Progress() {
           </div>
 
 
-          {/* =====================================================
+          {/* =================================================
               STATISTICS
-          ===================================================== */}
+          ================================================= */}
 
           <div className="grid grid-cols-2 gap-4 mt-6">
 
@@ -348,9 +362,9 @@ function Progress() {
           </div>
 
 
-          {/* =====================================================
+          {/* =================================================
               ACHIEVEMENT
-          ===================================================== */}
+          ================================================= */}
 
           <div className="mt-6 rounded-[35px] bg-white/10 backdrop-blur-xl p-6">
 
@@ -366,11 +380,9 @@ function Progress() {
               <div className="rounded-2xl bg-white/10 p-4 flex items-center gap-4">
 
                 <div className="text-4xl">
-
                   {sleepScore >= 80
                     ? "🏆"
                     : "🔒"}
-
                 </div>
 
                 <div>
@@ -380,11 +392,9 @@ function Progress() {
                   </h3>
 
                   <p className="text-violet-200 text-sm">
-
                     {sleepScore >= 80
                       ? "Berhasil mendapatkan Sleep Score di atas 80."
                       : "Capai Sleep Score 80 untuk membuka badge."}
-
                   </p>
 
                 </div>
@@ -392,16 +402,14 @@ function Progress() {
               </div>
 
 
-              {/* 7 DAYS */}
+              {/* STREAK */}
 
               <div className="rounded-2xl bg-white/10 p-4 flex items-center gap-4">
 
                 <div className="text-4xl">
-
                   {streak >= 7
                     ? "🔥"
                     : "🔒"}
-
                 </div>
 
                 <div>
@@ -411,11 +419,9 @@ function Progress() {
                   </h3>
 
                   <p className="text-violet-200 text-sm">
-
                     {streak >= 7
                       ? "Selamat! Kamu berhasil menjaga kebiasaan tidur."
                       : "Capai streak 7 hari untuk membuka badge."}
-
                   </p>
 
                 </div>
@@ -428,11 +434,9 @@ function Progress() {
               <div className="rounded-2xl bg-white/10 p-4 flex items-center gap-4">
 
                 <div className="text-4xl">
-
                   {sleepGoal >= 8
                     ? "🌙"
                     : "🔒"}
-
                 </div>
 
                 <div>
@@ -442,11 +446,9 @@ function Progress() {
                   </h3>
 
                   <p className="text-violet-200 text-sm">
-
                     {sleepGoal >= 8
                       ? "Target tidurmu sudah ideal."
                       : "Atur target tidur minimal 8 jam."}
-
                   </p>
 
                 </div>
@@ -458,9 +460,9 @@ function Progress() {
           </div>
 
 
-          {/* =====================================================
+          {/* =================================================
               AI INSIGHT
-          ===================================================== */}
+          ================================================= */}
 
           <div className="mt-6 rounded-[35px] bg-white/10 backdrop-blur-xl p-6">
 
@@ -523,9 +525,9 @@ function Progress() {
           </div>
 
 
-          {/* =====================================================
+          {/* =================================================
               HISTORY
-          ===================================================== */}
+          ================================================= */}
 
           <div className="mt-6 rounded-[35px] bg-white/10 backdrop-blur-xl p-6">
 
@@ -573,7 +575,9 @@ function Progress() {
       </div>
 
 
-      {/* BOTTOM NAV */}
+      {/* =================================================
+          BOTTOM NAVIGATION
+      ================================================= */}
 
       <BottomNav />
 
