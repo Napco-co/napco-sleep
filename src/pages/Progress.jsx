@@ -15,6 +15,7 @@ import {
   XAxis,
   YAxis,
   Tooltip,
+  CartesianGrid,
 } from "recharts";
 
 import { useSleep } from "../context/SleepContext";
@@ -30,66 +31,70 @@ function Progress() {
   } = useSleep();
 
   /*
-    HISTORY disimpan dari yang terbaru ke yang terlama.
-
-    Contoh:
-    [
-      { score: 44, date: "..." },
-      { score: 70, date: "..." },
-      { score: 80, date: "..." }
-    ]
-
-    Kita balik menjadi:
-    80 → 70 → 44
-
-    lalu ditempatkan dari kiri ke kanan.
+    HISTORY:
+    History terbaru disimpan paling depan.
+    Kita balik supaya:
+    Hari 1 → data paling lama
+    Hari 7 → data terbaru
   */
 
-  const chronologicalHistory = [...history]
+  const recentHistory = history
     .slice(0, 7)
+    .slice()
     .reverse();
+
+  /*
+    Selalu buat 7 hari.
+    Kalau belum ada data, nilainya 0.
+    Data terbaru berada di sebelah kanan.
+  */
 
   const weeklyData = Array.from(
     { length: 7 },
     (_, index) => ({
       day: index + 1,
-      score: 0,
+      score: recentHistory[index]?.score ?? 0,
     })
   );
 
   /*
-    Masukkan riwayat ke bagian paling kanan.
-    Jadi skor terbaru selalu berada di sebelah kanan.
+    Pastikan skor hari ini berada di hari ke-7.
   */
 
-  chronologicalHistory.forEach((item, index) => {
-    const position =
-      7 - chronologicalHistory.length + index;
-
-    if (position >= 0 && position < 7) {
-      weeklyData[position].score = item.score;
-    }
-  });
-
-  /*
-    Kalau ada sleepScore terbaru,
-    pastikan nilainya berada di Hari 7.
-  */
-
-  if (sleepScore > 0) {
+  if (history.length > 0) {
     weeklyData[6].score = sleepScore;
   }
 
-  const average = Math.round(
-    weeklyData.reduce(
-      (sum, item) => sum + item.score,
-      0
-    ) / weeklyData.length
+  /*
+    AVERAGE
+  */
+
+  const scoresWithData = weeklyData.filter(
+    (item) => item.score > 0
   );
 
-  const best = Math.max(
-    ...weeklyData.map((item) => item.score)
-  );
+  const average =
+    scoresWithData.length > 0
+      ? Math.round(
+          scoresWithData.reduce(
+            (sum, item) => sum + item.score,
+            0
+          ) / scoresWithData.length
+        )
+      : 0;
+
+  /*
+    BEST SCORE
+  */
+
+  const best =
+    scoresWithData.length > 0
+      ? Math.max(
+          ...scoresWithData.map(
+            (item) => item.score
+          )
+        )
+      : 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#8B5CF6] via-[#5B21B6] to-[#1E1B4B] flex justify-center">
@@ -112,7 +117,6 @@ function Progress() {
               Weekly Report
             </h1>
           </div>
-
 
           {/* SCORE CARD */}
 
@@ -143,7 +147,6 @@ function Progress() {
 
             </div>
 
-
             {/* GRAPH */}
 
             <div className="mt-8 h-[230px]">
@@ -158,59 +161,81 @@ function Progress() {
                   margin={{
                     top: 10,
                     right: 5,
-                    left: 5,
+                    left: 0,
                     bottom: 5,
                   }}
                 >
 
-                  {/* ANGKA HARI */}
+                  {/* GRID */}
+
+                  <CartesianGrid
+                    stroke="rgba(255,255,255,0.08)"
+                    vertical={false}
+                  />
+
+                  {/* X AXIS */}
 
                   <XAxis
                     dataKey="day"
                     stroke="#DDD6FE"
                     tick={{
                       fill: "#DDD6FE",
+                      fontSize: 14,
+                    }}
+                    tickLine={false}
+                    axisLine={{
+                      stroke: "#DDD6FE",
                     }}
                   />
 
-
-                  {/* ANGKA SCORE DI KIRI */}
+                  {/* Y AXIS */}
 
                   <YAxis
                     domain={[0, 100]}
-                    ticks={[
-                      0,
-                      25,
-                      50,
-                      75,
-                      100,
-                    ]}
+                    ticks={[0, 25, 50, 75, 100]}
                     stroke="#DDD6FE"
                     tick={{
                       fill: "#DDD6FE",
+                      fontSize: 14,
                     }}
+                    tickLine={false}
+                    axisLine={{
+                      stroke: "#DDD6FE",
+                    }}
+                    width={32}
                   />
-
 
                   {/* TOOLTIP */}
 
-                  <Tooltip />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#4C1D95",
+                      border: "1px solid rgba(255,255,255,0.2)",
+                      borderRadius: "12px",
+                      color: "white",
+                    }}
+                    labelStyle={{
+                      color: "#DDD6FE",
+                    }}
+                  />
 
-
-                  {/* GARIS */}
+                  {/* LINE */}
 
                   <Line
                     type="monotone"
                     dataKey="score"
-                    stroke="#A78BFA"
+                    stroke="#C4B5FD"
                     strokeWidth={4}
                     dot={{
                       r: 5,
                       fill: "#FFFFFF",
+                      stroke: "#C4B5FD",
+                      strokeWidth: 3,
                     }}
                     activeDot={{
                       r: 7,
                     }}
+                    connectNulls
                   />
 
                 </LineChart>
@@ -220,7 +245,6 @@ function Progress() {
             </div>
 
           </div>
-
 
           {/* STATS */}
 
@@ -246,7 +270,6 @@ function Progress() {
 
             </div>
 
-
             {/* STREAK */}
 
             <div className="rounded-3xl bg-white/10 p-5">
@@ -267,7 +290,6 @@ function Progress() {
 
             </div>
 
-
             {/* AVERAGE */}
 
             <div className="rounded-3xl bg-white/10 p-5">
@@ -287,7 +309,6 @@ function Progress() {
               </h2>
 
             </div>
-
 
             {/* BEST */}
 
@@ -311,7 +332,6 @@ function Progress() {
 
           </div>
 
-
           {/* ACHIEVEMENT */}
 
           <div className="mt-6 rounded-[35px] bg-white/10 backdrop-blur-xl p-6">
@@ -320,10 +340,9 @@ function Progress() {
               🏆 Achievement
             </h2>
 
-
             <div className="mt-6 space-y-4">
 
-              {/* SLEEP MASTER */}
+              {/* ACHIEVEMENT 1 */}
 
               <div className="rounded-2xl bg-white/10 p-4 flex items-center gap-4">
 
@@ -340,19 +359,16 @@ function Progress() {
                   </h3>
 
                   <p className="text-violet-200 text-sm">
-
                     {sleepScore >= 80
                       ? "Berhasil mendapatkan Sleep Score di atas 80."
                       : "Capai Sleep Score 80 untuk membuka badge."}
-
                   </p>
 
                 </div>
 
               </div>
 
-
-              {/* 7 DAYS */}
+              {/* ACHIEVEMENT 2 */}
 
               <div className="rounded-2xl bg-white/10 p-4 flex items-center gap-4">
 
@@ -369,19 +385,16 @@ function Progress() {
                   </h3>
 
                   <p className="text-violet-200 text-sm">
-
                     {streak >= 7
                       ? "Selamat! Kamu berhasil menjaga kebiasaan tidur."
                       : "Capai streak 7 hari untuk membuka badge."}
-
                   </p>
 
                 </div>
 
               </div>
 
-
-              {/* SLEEP GOAL */}
+              {/* ACHIEVEMENT 3 */}
 
               <div className="rounded-2xl bg-white/10 p-4 flex items-center gap-4">
 
@@ -398,11 +411,9 @@ function Progress() {
                   </h3>
 
                   <p className="text-violet-200 text-sm">
-
                     {sleepGoal >= 8
                       ? "Target tidurmu sudah ideal."
                       : "Atur target tidur minimal 8 jam."}
-
                   </p>
 
                 </div>
@@ -412,7 +423,6 @@ function Progress() {
             </div>
 
           </div>
-
 
           {/* AI INSIGHT */}
 
@@ -427,7 +437,6 @@ function Progress() {
               </h2>
 
             </div>
-
 
             <p className="mt-5 text-violet-100 leading-8">
 
@@ -468,15 +477,14 @@ function Progress() {
               {sleepScore < 40 && (
                 <>
                   🚨 Kualitas tidurmu sangat rendah.
-                  NAPPI AI menyarankan memperbaiki
-                  rutinitas tidur dan mengurangi screen time.
+                  NAPPI AI menyarankan memperbaiki rutinitas
+                  tidur dan mengurangi screen time.
                 </>
               )}
 
             </p>
 
           </div>
-
 
           {/* HISTORY */}
 
@@ -485,7 +493,6 @@ function Progress() {
             <h2 className="text-white text-2xl font-bold">
               📅 Riwayat Sleep Check
             </h2>
-
 
             <div className="mt-5 space-y-3">
 
@@ -525,9 +532,6 @@ function Progress() {
         </motion.div>
 
       </div>
-
-
-      {/* BOTTOM NAV */}
 
       <BottomNav />
 
