@@ -1,3 +1,4 @@
+
 import {
   Play,
   Pause,
@@ -13,7 +14,6 @@ import {
 } from "react";
 
 import { motion } from "framer-motion";
-
 import BottomNav from "../components/BottomNav";
 
 import forestRain from "../assets/audio/forest-rain.mp3";
@@ -56,678 +56,483 @@ const audioList = [
 ];
 
 function SleepAudio() {
-
   const [playing, setPlaying] = useState(0);
-
   const [isPlaying, setIsPlaying] = useState(false);
-
   const [currentTime, setCurrentTime] = useState(0);
-
   const [duration, setDuration] = useState(0);
-
   const [volume, setVolume] = useState(1);
+
   const [favorite, setFavorite] = useState(() => {
-
-  const saved = localStorage.getItem("favoriteAudio");
-
-  return saved ? JSON.parse(saved) : [];
-
-});
+    try {
+      const saved = localStorage.getItem("favoriteAudio");
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   const audioRef = useRef(null);
+  const currentAudio = audioList[playing];
 
   const formatTime = (time) => {
-
-    if (!time) return "00:00";
+    if (!Number.isFinite(time) || time <= 0) {
+      return "00:00";
+    }
 
     const minute = Math.floor(time / 60);
-
     const second = Math.floor(time % 60);
 
-    return `${minute}:${second
+    return `${minute.toString().padStart(2, "0")}:${second
       .toString()
       .padStart(2, "0")}`;
-
   };
 
-  const toggleAudio = () => {
-
-    if (!audioRef.current) return;
-
-    if (isPlaying) {
-
-      audioRef.current.pause();
-
-      setIsPlaying(false);
-
-    } else {
-
-      audioRef.current.play();
-
-      setIsPlaying(true);
-
-    }
-
-  };
-
-  const changeSong = (index) => {
-
-  const wasPlaying = isPlaying;
-
-  if (audioRef.current) {
-    audioRef.current.pause();
-  }
-
-  setPlaying(index);
-
-  setCurrentTime(0);
-
-  if (wasPlaying) {
-
-    setTimeout(() => {
-
-      if (audioRef.current) {
-
-        audioRef.current.play();
-
-        setIsPlaying(true);
-
-      }
-
-    }, 200);
-
-  }
-
-};
-
-  const changeProgress = (e) => {
-
-    const value = Number(e.target.value);
-
-    audioRef.current.currentTime = value;
-
-    setCurrentTime(value);
-
-  };
-
-  const changeVolume = (e) => {
-
-    const value = Number(e.target.value);
-
-    setVolume(value);
-
-  };
-  const toggleFavorite = () => {
-
-  if (favorite.includes(playing)) {
-
-    setFavorite(
-      favorite.filter((item) => item !== playing)
-    );
-
-  } else {
-
-    setFavorite([
-      ...favorite,
-      playing,
-    ]);
-
-  }
-
-};
-    useEffect(() => {
-
-    if (!audioRef.current) return;
-
-    audioRef.current.volume = volume;
-
-  }, [volume]);
-  useEffect(() => {
-
-  localStorage.setItem(
-    "favoriteAudio",
-    JSON.stringify(favorite)
-  );
-
-}, [favorite]);
-  useEffect(() => {
-
-  if (!audioRef.current) return;
-
-  if (isPlaying) {
-
-    audioRef.current.play();
-
-  }
-
-}, [playing]);
-
-  useEffect(() => {
-
+  const toggleAudio = async () => {
     const audio = audioRef.current;
-
     if (!audio) return;
 
-    const updateTime = () => {
+    if (isPlaying) {
+      audio.pause();
+      setIsPlaying(false);
+    } else {
+      try {
+        await audio.play();
+        setIsPlaying(true);
+      } catch {
+        setIsPlaying(false);
+      }
+    }
+  };
 
-      setCurrentTime(audio.currentTime);
-
-    };
-
-    const loaded = () => {
-
-      setDuration(audio.duration);
-
-    };
-
-    const ended = () => {
-
-  const next =
-    (playing + 1) % audioList.length;
-
-  setPlaying(next);
-
-  setCurrentTime(0);
-
-  setTimeout(() => {
-
-    if (audioRef.current) {
-
-      audioRef.current.play();
-
-      setIsPlaying(true);
-
+  const changeSong = async (index) => {
+    if (index === playing) {
+      if (audioRef.current) {
+        audioRef.current.currentTime = 0;
+        setCurrentTime(0);
+      }
+      return;
     }
 
-  }, 150);
+    setPlaying(index);
+    setCurrentTime(0);
+    setDuration(0);
 
-};
+    // Lagu baru otomatis diputar jika sebelumnya sedang diputar.
+    if (isPlaying) {
+      setIsPlaying(true);
+    }
+  };
 
-    audio.addEventListener(
-      "timeupdate",
-      updateTime
+  const changeProgress = (event) => {
+    const value = Number(event.target.value);
+    const audio = audioRef.current;
+
+    if (!audio || !Number.isFinite(audio.duration)) return;
+
+    audio.currentTime = value;
+    setCurrentTime(value);
+  };
+
+  const changeVolume = (event) => {
+    setVolume(Number(event.target.value));
+  };
+
+  const toggleFavorite = () => {
+    setFavorite((previous) =>
+      previous.includes(playing)
+        ? previous.filter((item) => item !== playing)
+        : [...previous, playing]
     );
+  };
 
-    audio.addEventListener(
-      "loadedmetadata",
-      loaded
+  const playNext = () => {
+    setPlaying((previous) => (previous + 1) % audioList.length);
+    setCurrentTime(0);
+    setDuration(0);
+  };
+
+  const playPrevious = () => {
+    setPlaying(
+      (previous) =>
+        (previous - 1 + audioList.length) % audioList.length
     );
+    setCurrentTime(0);
+    setDuration(0);
+  };
 
-    audio.addEventListener(
-      "ended",
-      ended
-    );
+  useEffect(() => {
+    try {
+      localStorage.setItem("favoriteAudio", JSON.stringify(favorite));
+    } catch {
+      // Favorit tetap berfungsi selama halaman terbuka jika penyimpanan tidak tersedia.
+    }
+  }, [favorite]);
 
-    return () => {
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
-      audio.removeEventListener(
-        "timeupdate",
-        updateTime
-      );
+    audio.volume = volume;
+  }, [volume]);
 
-      audio.removeEventListener(
-        "loadedmetadata",
-        loaded
-      );
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
 
-      audio.removeEventListener(
-        "ended",
-        ended
-      );
+    const updateTime = () => setCurrentTime(audio.currentTime);
 
+    const updateDuration = () => {
+      setDuration(Number.isFinite(audio.duration) ? audio.duration : 0);
     };
 
+    const handleEnded = () => {
+      setPlaying((previous) => (previous + 1) % audioList.length);
+      setCurrentTime(0);
+    };
+
+    const handlePlay = () => setIsPlaying(true);
+    const handlePause = () => setIsPlaying(false);
+
+    audio.addEventListener("timeupdate", updateTime);
+    audio.addEventListener("loadedmetadata", updateDuration);
+    audio.addEventListener("durationchange", updateDuration);
+    audio.addEventListener("ended", handleEnded);
+    audio.addEventListener("play", handlePlay);
+    audio.addEventListener("pause", handlePause);
+
+    return () => {
+      audio.removeEventListener("timeupdate", updateTime);
+      audio.removeEventListener("loadedmetadata", updateDuration);
+      audio.removeEventListener("durationchange", updateDuration);
+      audio.removeEventListener("ended", handleEnded);
+      audio.removeEventListener("play", handlePlay);
+      audio.removeEventListener("pause", handlePause);
+    };
+  }, []);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.volume = volume;
+
+    if (isPlaying) {
+      audio.play().catch(() => setIsPlaying(false));
+    }
   }, [playing]);
 
   return (
-
-<div className="min-h-screen bg-gradient-to-b from-[#8B5CF6] via-[#5B21B6] to-[#1E1B4B] flex justify-center">
-
-<div className="w-[393px] px-6 pt-8 pb-32">
-
-<audio
-
-ref={audioRef}
-
-src={audioList[playing].src}
-
-preload="metadata"
-
-/>
-
-<motion.div
-
-initial={{ opacity:0 }}
-
-animate={{ opacity:1 }}
-
->
-
-<h1 className="text-white text-4xl font-bold">
-
-Sleep Audio
-
-</h1>
-
-<p className="text-violet-200 mt-2">
-
-Relaksasi sebelum tidur
-
-</p>
-{/* PLAYER */}
-
-<div className="mt-8 rounded-[35px] bg-white/10 backdrop-blur-3xl border border-white/10 p-8">
-
-  <div className="text-center text-7xl">
-
-    {audioList[playing].emoji}
-
-  </div>
-
-  <h2 className="text-center text-white text-3xl font-bold mt-5">
-
-    {audioList[playing].title}
-
-  </h2>
-
-  <p className="text-center text-violet-200 mt-2">
-
-    {audioList[playing].subtitle}
-
-  </p>
-
-  <div className="mt-8">
-
-    <input
-
-      type="range"
-
-      min="0"
-
-      max={duration || 0}
-
-      value={currentTime}
-
-      onChange={changeProgress}
-
-      className="w-full accent-violet-500 cursor-pointer"
-
-    />
-
-    <div className="flex justify-between mt-3 text-violet-200 text-sm">
-
-      <span>
-
-        {formatTime(currentTime)}
-
-      </span>
-
-      <span>
-
-        {formatTime(duration)}
-
-      </span>
-
-    </div>
-
-  </div>
-
-  <div className="flex justify-center items-center gap-5 mt-8">
-
-  <button
-    onClick={() => {
-      const prev =
-        playing === 0
-          ? audioList.length - 1
-          : playing - 1;
-
-      changeSong(prev);
-    }}
-    className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-white"
-  >
-    ⏮
-  </button>
-
-  <button
-
-  onClick={toggleFavorite}
-
-  className={`w-14 h-14 rounded-full flex justify-center items-center transition ${
-    favorite.includes(playing)
-      ? "bg-pink-500 text-white"
-      : "bg-white/10 text-white"
-  }`}
-
->
-
-  <Heart
-    fill={favorite.includes(playing) ? "white" : "none"}
-  />
-
-</button>
-
-  <button
-    onClick={toggleAudio}
-    className="w-20 h-20 rounded-full bg-gradient-to-r from-violet-500 to-indigo-600 flex justify-center items-center text-white shadow-xl"
-  >
-    {isPlaying ? <Pause size={34} /> : <Play size={34} />}
-  </button>
-
-  <button
-    onClick={() => {
-      const next =
-        (playing + 1) % audioList.length;
-
-      changeSong(next);
-    }}
-    className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center text-white"
-  >
-    ⏭
-  </button>
-
-</div>
-
-  <div className="mt-6">
-
-    <input
-
-      type="range"
-
-      min="0"
-
-      max="1"
-
-      step="0.01"
-
-      value={volume}
-
-      onChange={changeVolume}
-
-      className="w-full accent-violet-500 cursor-pointer"
-
-    />
-
-  </div>
-
-</div>
-{/* PLAYLIST */}
-
-<div className="mt-8">
-
-  <h2 className="text-white text-2xl font-bold mb-4">
-
-    🎧 Playlist
-
-  </h2>
-
-  <div className="space-y-4">
-
-    {audioList.map((audio, index) => (
-
-      <motion.button
-
-        key={index}
-
-        whileHover={{ scale: 1.02 }}
-
-        whileTap={{ scale: 0.98 }}
-
-        onClick={() => changeSong(index)}
-
-        className={`w-full rounded-3xl p-5 transition-all duration-300 flex justify-between items-center ${
-          playing === index
-            ? "bg-violet-500 shadow-xl text-white"
-            : "bg-white/10 text-white hover:bg-white/20"
-        }`}
-
-      >
-
-        <div className="flex items-center gap-4">
-
-          <div className="text-4xl">
-
-            {audio.emoji}
-
+    <div className="min-h-screen flex justify-center bg-[#F8F0E5]">
+      <div className="w-full max-w-[393px] px-6 pt-8 pb-32">
+        <audio
+          ref={audioRef}
+          src={currentAudio.src}
+          preload="metadata"
+        />
+
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.35 }}
+        >
+          {/* HEADER */}
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#F1E1D5] px-4 py-2 text-xs font-semibold tracking-wider text-[#7A2634]">
+            <Headphones size={15} />
+            NAPCO SLEEP+
           </div>
 
-          <div className="text-left">
+          <h1 className="mt-4 text-4xl font-bold text-[#7A2634]">
+            Sleep Audio
+          </h1>
 
-            <h3 className="font-bold text-lg">
+          <p className="mt-2 leading-6 text-[#A66D68]">
+            Temukan suasana yang menenangkan sebelum tidur.
+          </p>
 
-              {audio.title}
+          {/* MAIN PLAYER */}
+          <div className="mt-7 rounded-[30px] border border-[#E3CBB9] bg-white p-6 shadow-sm">
+            <div className="flex h-28 w-28 mx-auto items-center justify-center rounded-full bg-[#F1E1D5] text-6xl">
+              {currentAudio.emoji}
+            </div>
 
-            </h3>
+            <h2 className="mt-5 text-center text-2xl font-bold text-[#7A2634]">
+              {currentAudio.title}
+            </h2>
 
-            <p className="text-sm opacity-80">
-
-              {audio.subtitle}
-
+            <p className="mt-1 text-center text-sm text-[#A66D68]">
+              {currentAudio.subtitle}
             </p>
 
+            {/* PROGRESS */}
+            <div className="mt-7">
+              <input
+                type="range"
+                min="0"
+                max={duration || 0}
+                step="0.1"
+                value={Math.min(currentTime, duration || 0)}
+                onChange={changeProgress}
+                aria-label="Posisi audio"
+                className="w-full cursor-pointer accent-[#7A2634]"
+              />
+
+              <div className="mt-1 flex justify-between text-xs tabular-nums text-[#A66D68]">
+                <span>{formatTime(currentTime)}</span>
+                <span>{formatTime(duration)}</span>
+              </div>
+            </div>
+
+            {/* PLAYER CONTROLS */}
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <button
+                onClick={playPrevious}
+                aria-label="Audio sebelumnya"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F1E1D5] text-[#7A2634] transition hover:bg-[#E3CBB9]"
+              >
+                <span className="text-lg">⏮</span>
+              </button>
+
+              <button
+                onClick={toggleFavorite}
+                aria-label="Tambah atau hapus favorit"
+                className={`flex h-11 w-11 items-center justify-center rounded-full transition ${
+                  favorite.includes(playing)
+                    ? "bg-[#7A2634] text-white"
+                    : "bg-[#F1E1D5] text-[#7A2634] hover:bg-[#E3CBB9]"
+                }`}
+              >
+                <Heart
+                  size={20}
+                  fill={favorite.includes(playing) ? "currentColor" : "none"}
+                />
+              </button>
+
+              <button
+                onClick={toggleAudio}
+                aria-label={isPlaying ? "Jeda audio" : "Putar audio"}
+                className="flex h-[68px] w-[68px] items-center justify-center rounded-full bg-[#7A2634] text-white shadow-md transition hover:bg-[#62202B]"
+              >
+                {isPlaying ? (
+                  <Pause size={30} fill="currentColor" />
+                ) : (
+                  <Play size={30} fill="currentColor" />
+                )}
+              </button>
+
+              <button
+                onClick={playNext}
+                aria-label="Audio berikutnya"
+                className="flex h-11 w-11 items-center justify-center rounded-full bg-[#F1E1D5] text-[#7A2634] transition hover:bg-[#E3CBB9]"
+              >
+                <span className="text-lg">⏭</span>
+              </button>
+            </div>
+
+            {/* VOLUME */}
+            <div className="mt-6 flex items-center gap-3">
+              <Volume2 size={19} className="shrink-0 text-[#7A2634]" />
+
+              <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={volume}
+                onChange={changeVolume}
+                aria-label="Volume audio"
+                className="w-full cursor-pointer accent-[#7A2634]"
+              />
+
+              <span className="w-9 text-right text-xs text-[#A66D68]">
+                {Math.round(volume * 100)}%
+              </span>
+            </div>
           </div>
 
-        </div>
+          {/* PLAYLIST */}
+          <div className="mt-8">
+            <h2 className="text-2xl font-bold text-[#7A2634]">
+              Playlist
+            </h2>
 
-        <div>
+            <p className="mt-1 text-sm text-[#A66D68]">
+              Pilih audio sesuai suasana yang kamu inginkan.
+            </p>
 
-          {playing === index ? (
+            <div className="mt-4 space-y-3">
+              {audioList.map((audio, index) => {
+                const isActive = playing === index;
 
-            isPlaying ? (
+                return (
+                  <motion.button
+                    key={audio.title}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => changeSong(index)}
+                    className={`flex w-full items-center justify-between gap-3 rounded-2xl border p-4 text-left transition ${
+                      isActive
+                        ? "border-[#7A2634] bg-[#7A2634] text-white shadow-sm"
+                        : "border-[#E3CBB9] bg-white text-[#7A2634] hover:bg-[#F1E1D5]"
+                    }`}
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      <div
+                        className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-2xl ${
+                          isActive ? "bg-white/10" : "bg-[#F1E1D5]"
+                        }`}
+                      >
+                        {audio.emoji}
+                      </div>
 
-              <Pause size={22} />
+                      <div className="min-w-0">
+                        <h3 className="font-bold">{audio.title}</h3>
+                        <p
+                          className={`mt-1 text-xs ${
+                            isActive ? "text-[#F1E1D5]" : "text-[#A66D68]"
+                          }`}
+                        >
+                          {audio.subtitle}
+                        </p>
+                      </div>
+                    </div>
 
-            ) : (
+                    <div className="shrink-0">
+                      {isActive && isPlaying ? (
+                        <Pause size={21} />
+                      ) : isActive ? (
+                        <Play size={21} />
+                      ) : (
+                        <Headphones size={21} />
+                      )}
+                    </div>
+                  </motion.button>
+                );
+              })}
+            </div>
+          </div>
 
-              <Play size={22} />
+          {/* NOW PLAYING */}
+          <div className="mt-7 rounded-[26px] bg-[#7A2634] p-5">
+            <p className="text-xs font-semibold uppercase tracking-wider text-[#E3CBB9]">
+              Sedang Dipilih
+            </p>
 
-            )
+            <div className="mt-3 flex items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  {currentAudio.title}
+                </h2>
+                <p className="mt-1 text-sm text-[#F1E1D5]">
+                  {currentAudio.subtitle}
+                </p>
+              </div>
 
-          ) : (
+              <div className="text-5xl">{currentAudio.emoji}</div>
+            </div>
+          </div>
 
-            <Headphones size={22} />
+          {/* FAVORITES */}
+          <div className="mt-5 rounded-[26px] border border-[#E3CBB9] bg-white p-5">
+            <div className="flex items-start gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F1E1D5]">
+                <Heart
+                  size={22}
+                  className="text-[#7A2634]"
+                  fill={favorite.length > 0 ? "currentColor" : "none"}
+                />
+              </div>
 
-          )}
+              <div>
+                <h2 className="text-lg font-bold text-[#7A2634]">
+                  Audio Favorit
+                </h2>
+                <p className="mt-1 text-sm leading-6 text-[#A66D68]">
+                  {favorite.length > 0
+                    ? `${favorite.length} audio tersimpan di daftar favoritmu.`
+                    : "Tekan ikon hati untuk menyimpan audio favoritmu."}
+                </p>
+              </div>
+            </div>
 
-        </div>
+            {favorite.length > 0 && (
+              <div className="mt-4 space-y-2">
+                {favorite.map((index) => (
+                  <button
+                    key={audioList[index].title}
+                    onClick={() => changeSong(index)}
+                    className="flex w-full items-center gap-3 rounded-xl bg-[#F8F0E5] p-3 text-left text-sm font-medium text-[#7A2634] hover:bg-[#F1E1D5]"
+                  >
+                    <span className="text-xl">
+                      {audioList[index].emoji}
+                    </span>
+                    <span>{audioList[index].title}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
 
-      </motion.button>
+          {/* LISTENING TIPS */}
+          <div className="mt-5 rounded-[26px] border border-[#E3CBB9] bg-white p-5">
+            <h2 className="text-xl font-bold text-[#7A2634]">
+              Tips Mendengarkan
+            </h2>
 
-    ))}
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-[#76534C]">
+              <li>🎧 Gunakan volume yang nyaman dan tidak terlalu keras.</li>
+              <li>🌙 Dengarkan audio sebagai bagian dari rutinitas relaksasi.</li>
+              <li>📱 Aktifkan mode Do Not Disturb jika diperlukan.</li>
+              <li>🍫 Padukan dengan rutinitas malam yang nyaman dan konsisten.</li>
+            </ul>
+          </div>
 
-  </div>
+          {/* NAPPI AI */}
+          <div className="mt-5 rounded-[26px] bg-[#F1E1D5] p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white">
+                <Headphones size={23} className="text-[#7A2634]" />
+              </div>
 
-</div>
+              <h2 className="text-xl font-bold text-[#7A2634]">
+                Rekomendasi NAPPI AI
+              </h2>
+            </div>
 
-{/* NOW PLAYING */}
+            <p className="mt-3 text-sm leading-7 text-[#76534C]">
+              Coba dengarkan audio dengan nyaman sebelum tidur. Redupkan
+              pencahayaan, kurangi aktivitas di layar, dan ciptakan suasana
+              kamar yang tenang untuk mendukung rutinitas istirahatmu.
+            </p>
+          </div>
 
-<div className="mt-8 rounded-[30px] bg-gradient-to-r from-violet-600 to-indigo-700 p-6 shadow-xl">
+          {/* MINI PLAYER */}
+          <div className="mt-5 flex items-center justify-between gap-3 rounded-2xl border border-[#E3CBB9] bg-white p-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#F1E1D5] text-2xl">
+                {currentAudio.emoji}
+              </div>
 
-  <p className="text-violet-200">
+              <div className="min-w-0">
+                <p className="text-xs text-[#A66D68]">Pemutar Audio</p>
+                <h3 className="truncate font-bold text-[#7A2634]">
+                  {currentAudio.title}
+                </h3>
+              </div>
+            </div>
 
-    Sedang Diputar
+            <button
+              onClick={toggleAudio}
+              aria-label={isPlaying ? "Jeda audio" : "Putar audio"}
+              className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-[#7A2634] text-white transition hover:bg-[#62202B]"
+            >
+              {isPlaying ? <Pause size={22} /> : <Play size={22} />}
+            </button>
+          </div>
+        </motion.div>
+      </div>
 
-  </p>
-
-  <div className="flex justify-between items-center mt-4">
-
-    <div>
-
-      <h2 className="text-white text-2xl font-bold">
-
-        {audioList[playing].title}
-
-      </h2>
-
-      <p className="text-violet-100 mt-2">
-
-        {audioList[playing].subtitle}
-
-      </p>
-
+      <BottomNav />
     </div>
-
-    <div className="text-6xl">
-
-      {audioList[playing].emoji}
-
-    </div>
-
-  </div>
-
-</div>
-{/* FAVORITE */}
-
-<div className="mt-8 rounded-[30px] bg-white/10 backdrop-blur-xl border border-white/10 p-6">
-
-  <div className="flex justify-between items-center">
-
-    <div>
-
-      <h2 className="text-white text-2xl font-bold">
-
-        ❤️ Favorit
-
-      </h2>
-
-      <p className="text-violet-200 mt-2">
-
-        Simpan audio favoritmu agar mudah diputar kembali.
-
-      </p>
-
-    </div>
-
-    <button
-
-onClick={toggleFavorite}
-
-className={`w-14 h-14 rounded-full flex justify-center items-center transition ${
-  favorite.includes(playing)
-    ? "bg-pink-500 text-white"
-    : "bg-white/10 text-white"
-}`}
-
->
-
-<Heart
-
-size={24}
-
-fill={favorite.includes(playing) ? "white" : "none"}
-
-/>
-
-</button>
-
-  </div>
-
-</div>
-
-{/* TIPS */}
-
-<div className="mt-8 rounded-[30px] bg-white/10 backdrop-blur-xl border border-white/10 p-6">
-
-  <h2 className="text-white text-2xl font-bold">
-
-    💡 Tips Mendengarkan
-
-  </h2>
-
-  <ul className="mt-5 space-y-4 text-violet-100 leading-7">
-
-    <li>
-
-      🎧 Gunakan earphone agar suara lebih nyaman.
-
-    </li>
-
-    <li>
-
-      🌙 Dengarkan 20–30 menit sebelum tidur.
-
-    </li>
-
-    <li>
-
-      📱 Aktifkan mode Do Not Disturb.
-
-    </li>
-
-    <li>
-
-      🍫 Kombinasikan dengan Dream Choco untuk relaksasi maksimal.
-
-    </li>
-
-  </ul>
-
-</div>
-
-{/* NAPPI AI */}
-
-<div className="mt-8 rounded-[30px] bg-gradient-to-r from-violet-600 to-indigo-700 p-6">
-
-  <h2 className="text-white text-2xl font-bold">
-
-    🤖 Rekomendasi NAPPI AI
-
-  </h2>
-
-  <p className="text-violet-100 mt-4 leading-7">
-
-    Dengarkan audio ini sekitar 30 menit sebelum tidur. Kurangi penggunaan HP dan ciptakan suasana kamar yang tenang agar kualitas tidur semakin baik.
-
-  </p>
-
-</div>
-{/* MINI PLAYER */}
-
-<div className="mt-8 rounded-[30px] bg-white/10 backdrop-blur-xl border border-white/10 p-5">
-
-  <div className="flex items-center justify-between">
-
-    <div>
-
-      <p className="text-violet-200 text-sm">
-
-        Sedang Diputar
-
-      </p>
-
-      <h3 className="text-white font-bold text-lg mt-1">
-
-        {audioList[playing].title}
-
-      </h3>
-
-    </div>
-
-    <button
-
-      onClick={toggleAudio}
-
-      className="w-14 h-14 rounded-full bg-gradient-to-r from-violet-500 to-indigo-600 flex justify-center items-center text-white"
-
-    >
-
-      {isPlaying ? <Pause size={24}/> : <Play size={24}/>}
-
-    </button>
-
-  </div>
-
-</div>
-
-</motion.div>
-
-</div>
-
-<BottomNav />
-
-</div>
-
-);
-
+  );
 }
 
 export default SleepAudio;

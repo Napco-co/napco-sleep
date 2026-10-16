@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +17,6 @@ const questions = [
       { text: "> 23.00", score: 8 },
     ],
   },
-
   {
     id: 2,
     emoji: "📱",
@@ -28,7 +28,6 @@ const questions = [
       { text: "> 2 jam", score: 0 },
     ],
   },
-
   {
     id: 3,
     emoji: "☕",
@@ -40,7 +39,6 @@ const questions = [
       { text: "> 2 gelas", score: 0 },
     ],
   },
-
   {
     id: 4,
     emoji: "😵",
@@ -53,7 +51,6 @@ const questions = [
       { text: "Sangat Stres", score: 0 },
     ],
   },
-
   {
     id: 5,
     emoji: "🏃",
@@ -66,29 +63,21 @@ const questions = [
 ];
 
 function Question() {
-
   const navigate = useNavigate();
-
   const { setSleepScore, setHistory } = useSleep();
 
   const [step, setStep] = useState(0);
-
   const [selected, setSelected] = useState(null);
-
   const [answers, setAnswers] = useState([]);
 
   const nextQuestion = () => {
-
-    if (!selected) return;
+    if (selected === null) return;
 
     const newAnswers = [...answers];
-
     newAnswers[step] = selected;
-
     setAnswers(newAnswers);
 
     if (step === questions.length - 1) {
-
       const totalScore = newAnswers.reduce(
         (total, item) => total + item.score,
         0
@@ -96,150 +85,138 @@ function Question() {
 
       setSleepScore(totalScore);
 
-      setHistory((prev) => [
-  {
-    score: totalScore,
-    date: new Date().toLocaleDateString("id-ID"),
-  },
-  ...prev,
-].slice(0, 7));
+      setHistory((previous) => [
+        {
+          score: totalScore,
+          date: new Date().toLocaleDateString("id-ID"),
+        },
+        ...previous,
+      ].slice(0, 7));
 
       navigate("/loading");
-
       return;
-
     }
 
-    setStep(step + 1);
-
+    setStep((previous) => previous + 1);
     setSelected(null);
-
   };
 
-    return (
+  const currentQuestion = questions[step];
+  const progress = ((step + 1) / questions.length) * 100;
 
-    <div className="min-h-screen bg-gradient-to-b from-[#8B5CF6] via-[#5B21B6] to-[#1E1B4B] flex justify-center">
+  return (
+    <div className="min-h-screen flex justify-center bg-[#F8F0E5]">
+      <div className="w-full max-w-[393px] px-6 pt-8 pb-10">
 
-      <div className="w-[393px] px-6 pt-8 pb-32">
-
-        {/* Header */}
-
-        <div className="flex justify-between items-center">
-
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
           <button
             onClick={() => navigate(-1)}
-            className="w-12 h-12 rounded-2xl bg-white/10 backdrop-blur-xl flex items-center justify-center text-white"
+            aria-label="Kembali"
+            className="flex h-12 w-12 items-center justify-center rounded-2xl border border-[#E3CBB9] bg-white text-[#7A2634] transition hover:bg-[#F1E1D5]"
           >
-
             <ArrowLeft size={22} />
-
           </button>
 
-          <span className="text-violet-200">
-
-            {step + 1}/{questions.length}
-
+          <span className="rounded-full bg-[#F1E1D5] px-4 py-2 text-sm font-semibold text-[#7A2634]">
+            {step + 1} / {questions.length}
           </span>
-
         </div>
 
+        {/* QUESTION CARD */}
         <motion.div
-
           key={step}
-
-          initial={{ opacity: 0, x: 80 }}
-
+          initial={{ opacity: 0, x: 40 }}
           animate={{ opacity: 1, x: 0 }}
-
-          transition={{ duration: 0.4 }}
-
-          className="mt-8 rounded-[35px] bg-white/10 backdrop-blur-3xl border border-white/10 p-8"
-
+          transition={{ duration: 0.3 }}
+          className="mt-8 rounded-[30px] border border-[#E3CBB9] bg-white p-6 shadow-sm"
         >
-
-          <div className="text-center text-6xl">
-
-            {questions[step].emoji}
-
+          <div className="flex justify-center">
+            <div className="flex h-24 w-24 items-center justify-center rounded-full bg-[#F1E1D5] text-5xl">
+              {currentQuestion.emoji}
+            </div>
           </div>
 
-          <h1 className="mt-6 text-center text-3xl font-bold text-white leading-snug">
-
-            {questions[step].question}
-
+          <h1 className="mt-6 text-center text-2xl font-bold leading-snug text-[#7A2634]">
+            {currentQuestion.question}
           </h1>
 
-          <div className="mt-10 space-y-4">
-                    {questions[step].options.map((option) => (
+          <p className="mt-3 text-center text-sm text-[#A66D68]">
+            Pilih jawaban yang paling sesuai dengan kebiasaanmu.
+          </p>
 
-            <motion.button
-              key={option.text}
-              whileTap={{ scale: 0.97 }}
-              whileHover={{ scale: 1.02 }}
-              onClick={() => setSelected(option)}
-              className={`w-full rounded-2xl p-5 text-left transition-all duration-300 ${
-                selected?.text === option.text
-                  ? "bg-violet-500 text-white shadow-xl"
-                  : "bg-white/10 text-violet-100 hover:bg-white/20"
-              }`}
-            >
+          {/* ANSWER OPTIONS */}
+          <div className="mt-8 space-y-3">
+            {currentQuestion.options.map((option) => {
+              const isSelected = selected?.text === option.text;
 
-              {option.text}
+              return (
+                <motion.button
+                  key={option.text}
+                  type="button"
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => setSelected(option)}
+                  className={`w-full rounded-2xl border p-4 text-left font-medium transition ${
+                    isSelected
+                      ? "border-[#7A2634] bg-[#7A2634] text-white shadow-sm"
+                      : "border-[#E3CBB9] bg-[#F8F0E5] text-[#65433F] hover:border-[#C58A83] hover:bg-[#F1E1D5]"
+                  }`}
+                >
+                  <span className="flex items-center justify-between gap-3">
+                    <span>{option.text}</span>
 
-            </motion.button>
-
-          ))}
-
-        </div>
-
-        {/* Progress */}
-
-        <div className="mt-8">
-
-          <div className="h-2 rounded-full bg-white/10 overflow-hidden">
-
-            <motion.div
-              className="h-full bg-violet-400"
-              initial={{ width: 0 }}
-              animate={{
-                width: `${((step + 1) / questions.length) * 100}%`,
-              }}
-              transition={{ duration: 0.5 }}
-            />
-
+                    <span
+                      className={`flex h-5 w-5 items-center justify-center rounded-full border ${
+                        isSelected
+                          ? "border-white bg-white"
+                          : "border-[#C58A83]"
+                      }`}
+                    >
+                      {isSelected && (
+                        <span className="h-2.5 w-2.5 rounded-full bg-[#7A2634]" />
+                      )}
+                    </span>
+                  </span>
+                </motion.button>
+              );
+            })}
           </div>
 
-        </div>
+          {/* PROGRESS BAR */}
+          <div className="mt-8">
+            <div className="mb-2 flex justify-between text-xs text-[#A66D68]">
+              <span>Progress Sleep Check</span>
+              <span>{Math.round(progress)}%</span>
+            </div>
 
-        {/* Next Button */}
+            <div className="h-2 overflow-hidden rounded-full bg-[#F1E1D5]">
+              <motion.div
+                className="h-full rounded-full bg-[#7A2634]"
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          </div>
 
-        <motion.button
+          {/* NEXT BUTTON */}
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={nextQuestion}
+            disabled={selected === null}
+            className="mt-8 w-full rounded-2xl bg-[#7A2634] py-4 text-base font-semibold text-white transition hover:bg-[#62202B] disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {step === questions.length - 1
+              ? "Lihat Hasil"
+              : "Lanjut"}
+          </motion.button>
+        </motion.div>
 
-          whileTap={{ scale: 0.97 }}
-          whileHover={{ scale: 1.02 }}
-
-          onClick={nextQuestion}
-
-          disabled={!selected}
-
-          className="mt-8 w-full rounded-3xl bg-gradient-to-r from-violet-500 to-indigo-600 py-5 text-lg font-semibold text-white disabled:opacity-40"
-
-        >
-
-          {step === questions.length - 1
-            ? "Lihat Hasil"
-            : "Lanjut"}
-
-        </motion.button>
-
-      </motion.div>
-
+        <p className="mt-5 text-center text-xs leading-5 text-[#A66D68]">
+          Jawab sesuai kebiasaanmu agar hasil Sleep Check lebih relevan.
+        </p>
+      </div>
     </div>
-
-  </div>
-
-);
-
+  );
 }
 
 export default Question;

@@ -1,6 +1,6 @@
+
 import {
   MoonStar,
-  Brain,
   Headphones,
   RotateCcw,
   Sparkles,
@@ -8,14 +8,11 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-
 import { useSleep } from "../context/SleepContext";
-
 import BottomNav from "../components/BottomNav";
 
 function Result() {
   const navigate = useNavigate();
-
   const { sleepScore } = useSleep();
 
   let status = "";
@@ -24,7 +21,6 @@ function Result() {
 
   if (sleepScore >= 85) {
     status = "🌙 Sangat Baik";
-
     description =
       "Kualitas tidurmu sangat baik. Pertahankan kebiasaan sehatmu setiap hari.";
 
@@ -33,192 +29,168 @@ function Result() {
       "Tubuhmu mendapatkan waktu istirahat yang cukup.",
       "Pertahankan rutinitas tidurmu agar tetap konsisten.",
     ];
-  }
-
-  else if (sleepScore >= 70) {
-
+  } else if (sleepScore >= 70) {
     status = "😊 Baik";
-
     description =
       "Tidurmu sudah baik, tetapi masih ada beberapa hal yang bisa ditingkatkan.";
 
     aiInsight = [
       "Cobalah tidur sedikit lebih awal.",
       "Kurangi penggunaan HP sebelum tidur.",
-      "Pertahankan durasi tidurmu.",
+      "Pertahankan durasi tidur yang cukup.",
     ];
-  }
-
-  else if (sleepScore >= 55) {
-
+  } else if (sleepScore >= 55) {
     status = "😴 Cukup";
-
     description =
-      "Kualitas tidurmu cukup, namun tubuhmu belum memperoleh istirahat optimal.";
+      "Kualitas tidurmu cukup, namun kebiasaan tidurmu masih bisa ditingkatkan.";
 
     aiInsight = [
-      "Kurangi konsumsi kopi pada malam hari.",
+      "Kurangi konsumsi kopi menjelang waktu tidur.",
       "Batasi screen time sebelum tidur.",
-      "Mulailah tidur lebih awal.",
+      "Mulailah tidur lebih awal secara bertahap.",
     ];
-  }
-
-  else if (sleepScore >= 40) {
-
+  } else if (sleepScore >= 40) {
     status = "😪 Kurang";
-
     description =
-      "Pola tidurmu kurang baik sehingga dapat memengaruhi kesehatan dan produktivitas.";
+      "Pola tidurmu mungkin perlu diperbaiki agar mendukung kesehatan dan produktivitas.";
 
     aiInsight = [
-      "Kamu terlalu sering begadang.",
-      "Stres dapat memengaruhi kualitas tidurmu.",
-      "Olahraga ringan dapat membantu tidur lebih nyenyak.",
+      "Cobalah mengurangi kebiasaan begadang.",
+      "Kelola stres dengan aktivitas relaksasi.",
+      "Pertimbangkan olahraga ringan secara rutin.",
     ];
-  }
-
-  else {
-
+  } else {
     status = "🚨 Sangat Buruk";
-
     description =
-      "Kualitas tidurmu sangat rendah. Disarankan segera memperbaiki pola tidur.";
+      "Skor Sleep Check-mu rendah. Mulailah memperbaiki rutinitas tidur secara bertahap.";
 
     aiInsight = [
-      "Tidurmu berada pada tingkat yang kurang sehat.",
-      "Kurangi penggunaan HP pada malam hari.",
-      "Mulailah membangun rutinitas tidur yang konsisten.",
+      "Bangun jadwal tidur dan bangun yang konsisten.",
+      "Kurangi penggunaan HP menjelang waktu tidur.",
+      "Jika kesulitan tidur terus berlanjut, pertimbangkan berkonsultasi dengan tenaga kesehatan.",
     ];
-
   }
 
   return (
-
-    <div className="min-h-screen bg-gradient-to-b from-[#8B5CF6] via-[#5B21B6] to-[#1E1B4B] flex justify-center">
-
-      <div className="w-[393px] px-6 py-8">
+    <div className="min-h-screen flex justify-center bg-[#F8F0E5]">
+      <div className="w-full max-w-[393px] px-6 py-8 pb-32">
 
         <motion.div
-
-          initial={{ opacity: 0, y: 40 }}
-
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-
-          transition={{ duration: .6 }}
-
-          className="rounded-[35px] bg-white/10 backdrop-blur-3xl border border-white/10 p-8"
-
+          transition={{ duration: 0.5 }}
+          className="rounded-[30px] border border-[#E3CBB9] bg-white p-6 shadow-sm"
         >
-
-          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-violet-500 to-indigo-600 shadow-2xl">
-
-            <MoonStar
-              size={45}
-              className="text-white"
-            />
-
+          {/* SCORE ICON */}
+          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-[#7A2634] shadow-md">
+            <MoonStar size={44} className="text-[#F8F0E5]" />
           </div>
 
-          <h1 className="mt-6 text-center text-white text-6xl font-bold">
-
+          {/* SLEEP SCORE */}
+          <h1 className="mt-6 text-center text-6xl font-bold text-[#7A2634]">
             {sleepScore}
-
           </h1>
 
-          <p className="text-center text-violet-200 mt-2">
-
+          <p className="mt-2 text-center font-medium text-[#A66D68]">
             Sleep Score
-
           </p>
 
-          <div className="mt-8 rounded-3xl bg-violet-500/20 border border-violet-400/20 p-5 text-center">
+          <div className="mx-auto mt-4 h-2 w-24 overflow-hidden rounded-full bg-[#F1E1D5]">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{
+                width: `${Math.max(0, Math.min(100, sleepScore))}%`,
+              }}
+              transition={{ duration: 0.8 }}
+              className="h-full rounded-full bg-[#C58A83]"
+            />
+          </div>
 
-            <h2 className="text-white text-2xl font-bold">
-
-              {status}
-
-            </h2>
-
-            <p className="mt-3 text-violet-100 leading-7">
-
-              {description}
-
+          {/* STATUS */}
+          <div className="mt-8 rounded-3xl border border-[#E3CBB9] bg-[#F8F0E5] p-5 text-center">
+            <p className="text-xs font-semibold uppercase tracking-widest text-[#A66D68]">
+              Hasil Analisis
             </p>
 
+            <h2 className="mt-3 text-2xl font-bold text-[#7A2634]">
+              {status}
+            </h2>
+
+            <p className="mt-3 text-sm leading-7 text-[#76534C]">
+              {description}
+            </p>
           </div>
 
-          <div className="mt-8 rounded-3xl bg-white/10 p-6">
-
+          {/* NAPPI AI INSIGHT */}
+          <div className="mt-6 rounded-3xl border border-[#E3CBB9] bg-white p-5">
             <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F1E1D5]">
+                <Sparkles className="text-[#7A2634]" size={22} />
+              </div>
 
-              <Sparkles className="text-violet-300" />
-
-              <h2 className="text-white text-xl font-bold">
-
-                Insight dari NAPPI AI
-
-              </h2>
-
+              <div>
+                <h2 className="text-lg font-bold text-[#7A2634]">
+                  Insight dari NAPPI AI
+                </h2>
+                <p className="text-xs text-[#A66D68]">
+                  Saran untuk rutinitas tidurmu
+                </p>
+              </div>
             </div>
 
-            <div className="mt-5 space-y-4">
-
-                          {aiInsight.map((item, index) => (
-
+            <div className="mt-5 space-y-3">
+              {aiInsight.map((item, index) => (
                 <div
                   key={index}
-                  className="rounded-2xl bg-white/10 p-4 text-violet-100"
+                  className="flex items-start gap-3 rounded-2xl bg-[#F8F0E5] p-4"
                 >
-                  ✅ {item}
+                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#7A2634] text-xs font-bold text-white">
+                    {index + 1}
+                  </span>
+
+                  <p className="text-sm leading-6 text-[#65433F]">
+                    {item}
+                  </p>
                 </div>
-
               ))}
-
             </div>
 
+            <p className="mt-4 text-xs leading-5 text-[#A66D68]">
+              Hasil ini merupakan panduan kebiasaan tidur, bukan diagnosis medis.
+            </p>
           </div>
 
-          {/* BUTTON */}
-
+          {/* RECOMMENDATION BUTTON */}
           <button
             onClick={() => navigate("/recommendation")}
-            className="mt-8 w-full rounded-3xl bg-gradient-to-r from-violet-500 to-indigo-600 py-5 text-white font-semibold hover:scale-[1.02] transition"
+            className="mt-7 flex w-full items-center justify-center gap-2 rounded-2xl bg-[#7A2634] py-4 font-semibold text-white transition hover:bg-[#62202B]"
           >
             🍫 Lihat Rekomendasi
           </button>
 
+          {/* AUDIO BUTTON */}
           <button
             onClick={() => navigate("/audio")}
-            className="mt-4 w-full rounded-3xl bg-white/10 py-5 text-white flex justify-center items-center gap-3 hover:bg-white/20 transition"
+            className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl border border-[#E3CBB9] bg-[#F8F0E5] py-4 font-semibold text-[#7A2634] transition hover:bg-[#F1E1D5]"
           >
-
-            <Headphones size={22} />
-
+            <Headphones size={21} />
             Sleep Audio
-
           </button>
 
+          {/* RETAKE BUTTON */}
           <button
             onClick={() => navigate("/sleep-check")}
-            className="mt-4 w-full rounded-3xl bg-white/10 py-5 text-white flex justify-center items-center gap-3 hover:bg-white/20 transition"
+            className="mt-3 flex w-full items-center justify-center gap-3 rounded-2xl border border-[#E3CBB9] bg-white py-4 font-semibold text-[#76534C] transition hover:bg-[#F8F0E5]"
           >
-
-            <RotateCcw size={22} />
-
+            <RotateCcw size={20} />
             Cek Ulang
-
           </button>
-
         </motion.div>
-
       </div>
 
       <BottomNav />
-
     </div>
-
   );
-
 }
 
 export default Result;
